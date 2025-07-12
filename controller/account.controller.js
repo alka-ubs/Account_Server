@@ -170,6 +170,7 @@ console.log('Updates:', updates);
 const updatePassword = async (req, res) => {
   const userId = req.user.user_id;
   const { currentPassword, newPassword } = req.body;
+  console.log("🔥 req.body:", req.body);
 
   // Validate input
   if (!currentPassword || !newPassword) {
@@ -223,6 +224,7 @@ const checkSession = (req, res) => {
   res.status(401).json({ authenticated: false });
   
 };
+
 
 const deleteAccount = async (req, res) => {
     const userId = req.user?.user_id;
