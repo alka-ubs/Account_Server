@@ -2,6 +2,26 @@ const pool = require("../db");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const bcrypt = require('bcryptjs');
+const ALLOWED_FIELDS = [
+  'username',
+  'recovery_email',
+  'is_active',
+  'is_verified',
+  'is_admin',
+  'mailbox_quota',
+  'used_quota',
+  'two_factor_enabled',
+  'failed_login_attempts',
+  'last_login',
+  'first_name',
+  'last_name',
+  'mobile',
+  'blocked_emails',
+  'spammed_emails',
+  'language',
+  'timezone',
+  'RecoveryEmail',
+];
 
 const getProfile = async (req, res)=>{
     let userId = req.user.user_id;
@@ -101,7 +121,8 @@ const updatePreferences =  async (req, res) => {
 const updateProfile =  async (req, res) => {
   const  userId  = req.user.user_id;
   const { updates } = req.body;
-
+console.log('Request body:', req.body);
+console.log('Updates:', updates);
   try {
     // Filter out any fields that shouldn't be updated
     const filteredUpdates = {};
