@@ -32,22 +32,30 @@ const sessionMiddleware = session({
 
 // Enhanced CORS configuration
 const corsOptions = {
-  origin: (origin, callback) => {
+  origin: function (origin, callback) {
     const allowedOrigins = [
-      "https://localhost:5173",
+      "http://localhost:5173",
+      "http://173.212.211.19:5173",
+      "http://173.212.211.19:8001",
       "https://mail.ubshq.com",
       "https://dev-mail.ubshq.com"
     ];
-    
+
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      console.warn("Blocked CORS origin:", origin);
+      callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   optionsSuccessStatus: 200
 };
+
+app.use(cors(corsOptions));
+
 
 app.use(cors(corsOptions));
 app.use(express.json());
