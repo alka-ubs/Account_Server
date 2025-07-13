@@ -25,6 +25,7 @@ const ALLOWED_FIELDS = [
 
 const getProfile = async (req, res)=>{
     let userId = req.user.user_id;
+    console.log("profile route")
     try{
         const userQuery = await pool.query(
             `SELECT 
