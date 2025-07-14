@@ -21,76 +21,88 @@ const ALLOWED_FIELDS = [
   'language',
   'timezone',
   'RecoveryEmail',
+  'gender',
+  'birthday',
+  'address',
 ];
 
-const getProfile = async (req, res)=>{
-    let userId = req.user.user_id;
-    console.log("profile route")
-    try{
-        const userQuery = await pool.query(
-            `SELECT 
-              email, 
-              username, 
-              is_active, 
-              is_verified, 
-              is_admin, 
-              mailbox_quota, 
-              used_quota, 
-              two_factor_enabled, 
-              failed_login_attempts, 
-              last_login, 
-              created_at, 
-              updated_at, 
-              deleted_at, 
-              first_name, 
-              last_name, 
-              mobile,
-              preferences,
-              language,
-              timezone,
-              avatar,
-              RecoveryEmail
-            FROM users 
-            WHERE id = $1`,
-            [userId]
-          );
-      
-          if (userQuery.rows.length === 0) {
-            return res.status(404).json({ error: "User not found" });
-          }
-      
-          const user = userQuery.rows[0];
+const getProfile = async (req, res) => {
+  let userId = req.user.user_id;
+  console.log("profile route");
 
-          let userBody ={
-            id: userId,
-            email: user.email,
-            username: user.username,
-            is_active: user.is_active,
-            is_verified: user.is_verified,
-            is_admin: user.is_admin,
-            mailbox_quota: user.mailbox_quota,
-            used_quota: user.used_quota,
-            two_factor_enabled: user.two_factor_enabled,
-            failed_login_attempts: user.failed_login_attempts,
-            last_login: user.last_login,
-            created_at: user.created_at,
-            updated_at: user.updated_at,
-            deleted_at: user.deleted_at,
-            first_name: user.first_name,
-            last_name: user.last_name,
-            mobile: user.mobile,
-            preferences: user.preferences,
-            language: user.language,
-            timezone: user.timezone,
-            avatar: user.avatar,
-            RecoveryEmail: user.RecoveryEmail
-          };
+  try {
+    const userQuery = await pool.query(
+      `SELECT 
+        email, 
+        username, 
+        is_active, 
+        is_verified, 
+        is_admin, 
+        mailbox_quota, 
+        used_quota, 
+        two_factor_enabled, 
+        failed_login_attempts, 
+        last_login, 
+        created_at, 
+        updated_at, 
+        deleted_at, 
+        first_name, 
+        last_name, 
+        mobile,
+        preferences,
+        language,
+        timezone,
+        avatar,
+        RecoveryEmail,
+        gender,
+        birthday,
+        address
+      FROM users 
+      WHERE id = $1`,
+      [userId]
+    );
 
-          res.status(200).json(userBody)
-    }catch(err){
-      console.log(err);
+    if (userQuery.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
     }
-  };
+
+    const user = userQuery.rows[0];
+
+    const userBody = {
+      id: userId,
+      email: user.email,
+      username: user.username,
+      is_active: user.is_active,
+      is_verified: user.is_verified,
+      is_admin: user.is_admin,
+      mailbox_quota: user.mailbox_quota,
+      used_quota: user.used_quota,
+      two_factor_enabled: user.two_factor_enabled,
+      failed_login_attempts: user.failed_login_attempts,
+      last_login: user.last_login,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+      deleted_at: user.deleted_at,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      mobile: user.mobile,
+      preferences: user.preferences,
+      language: user.language,
+      timezone: user.timezone,
+      avatar: user.avatar,
+      RecoveryEmail: user.RecoveryEmail,
+      gender: user.gender,
+      birthday: user.birthday,
+      address: user.address
+    };
+
+    res.status(200).json(userBody);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+};
+
 const updatePreferences =  async (req, res) => {
   const userId = req.user.user_id; // from auth middleware
   const newPrefs = req.body;
@@ -272,11 +284,48 @@ const deleteAccount = async (req, res) => {
     }
 };
 
+
+const updateAvatar = async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    // Generate avatar path (accessible URL)
+    const avatarPath = `/uploads/${req.file.filename}`;
+
+    // Update avatar and return avatar + username
+    const updateQuery = `
+      UPDATE users
+      SET avatar = $1, updated_at = NOW()
+      WHERE id = $2
+      RETURNING avatar, username
+    `;
+
+    const result = await pool.query(updateQuery, [avatarPath, userId]);
+
+    res.status(200).json({
+      message: "Avatar updated successfully",
+      avatar: result.rows[0].avatar,
+      username: result.rows[0].username
+    });
+  } catch (err) {
+    console.error("Error updating avatar:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+
+
 module.exports = {
     getProfile,
     checkSession,
     updateProfile,
     updatePreferences,
     updatePassword,
-    deleteAccount
+    deleteAccount,
+    updateAvatar
 }
